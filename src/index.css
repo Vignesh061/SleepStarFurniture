@@ -1,0 +1,434 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #FAF7F2;
+    color: #2D1A0E;
+    @apply antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: #2D1A0E;
+  }
+}
+
+/* Custom scrollbars with warm timber and olive harmony */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF7F2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C9DAB2;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6B8E23;
+}
+
+@keyframes slideProgress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Sleep Star Creative Logo Loading Animations */
+@keyframes logoPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 4px 12px rgba(107, 142, 35, 0.15));
+  }
+  50% {
+    transform: scale(1.06);
+    filter: drop-shadow(0 12px 28px rgba(107, 142, 35, 0.35)) drop-shadow(0 0 16px rgba(217, 119, 6, 0.25));
+  }
+}
+
+@keyframes orbitSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbitSpinReverse {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes shimmerPass {
+  0% {
+    transform: translateX(-160%) skewX(-20deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.75;
+  }
+  50%, 100% {
+    transform: translateX(180%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes auraRipple {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes dotBounce {
+  0%, 80%, 100% {
+    transform: scale(0.5);
+    opacity: 0.35;
+  }
+  40% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.animate-logo-pulse {
+  animation: logoPulse 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-orbit-spin {
+  animation: orbitSpin 5s linear infinite;
+}
+
+.animate-orbit-spin-reverse {
+  animation: orbitSpinReverse 7s linear infinite;
+}
+
+.animate-shimmer-pass {
+  animation: shimmerPass 2.6s ease-in-out infinite;
+}
+
+.animate-aura-ripple {
+  animation: auraRipple 2.2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+/* ================================================================
+   SLEEP STAR OFFICIAL LOGO ANIMATION (from sleep-star-logo-animation.html)
+   ================================================================ */
+.sleep-star-stage {
+  aspect-ratio: 1;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  background: #f1ebdc;
+}
+
+.sleep-star-stage svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sleep-star-stage .brand {
+  font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
+}
+
+.sleep-star-stage .sub {
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  font-weight: 600;
+}
+
+.sleep-star-stage .ring,
+.sleep-star-stage .ring2,
+.sleep-star-stage .ln {
+  fill: none;
+  stroke: url(#ssl_gold);
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+}
+
+.sleep-star-stage .ring {
+  stroke-width: 5;
+  transform: rotate(-90deg);
+  transform-origin: 160px 160px;
+}
+
+.sleep-star-stage .ring2 {
+  stroke-width: 1.5;
+  transform: rotate(-90deg);
+  transform-origin: 160px 160px;
+}
+
+.sleep-star-stage .ln {
+  stroke-width: 4;
+}
+
+.sleep-star-stage .cord {
+  transform: scaleY(0);
+  transform-origin: 160px 46px;
+}
+
+.sleep-star-stage .shade {
+  opacity: 0;
+  transform: translateY(-40px);
+}
+
+.sleep-star-stage .swing {
+  transform-origin: 160px 46px;
+}
+
+.sleep-star-stage .glow,
+.sleep-star-stage .glow2,
+.sleep-star-stage .lit,
+.sleep-star-stage .cone,
+.sleep-star-stage .t1,
+.sleep-star-stage .t2,
+.sleep-star-stage .table,
+.sleep-star-stage .c1,
+.sleep-star-stage .c2,
+.sleep-star-stage .c3 {
+  opacity: 0;
+}
+
+.sleep-star-stage .pop {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.sleep-star-stage .shine {
+  transform: translateX(-40px) skewX(-18deg);
+}
+
+/* Timeline when .play is active */
+.sleep-star-stage.play .ring {
+  animation: ssl_draw 1.8s 0.3s cubic-bezier(0.6, 0.1, 0.2, 1) forwards;
+}
+
+.sleep-star-stage.play .ring2 {
+  animation: ssl_draw 1.6s 0.7s ease forwards;
+}
+
+.sleep-star-stage.play .f1 {
+  animation: ssl_draw 1.1s 1.5s ease forwards;
+}
+
+.sleep-star-stage.play .f2 {
+  animation: ssl_draw 1.1s 1.9s ease forwards;
+}
+
+.sleep-star-stage.play .cord {
+  animation: ssl_cord 0.75s 2.3s cubic-bezier(0.3, 1.35, 0.5, 1) forwards;
+}
+
+.sleep-star-stage.play .shade {
+  animation: ssl_shade 0.75s 2.3s cubic-bezier(0.3, 1.35, 0.5, 1) forwards;
+}
+
+.sleep-star-stage.play .swing {
+  animation: ssl_swing 2.8s 3s ease-in-out;
+}
+
+.sleep-star-stage.play .glow,
+.sleep-star-stage.play .lit,
+.sleep-star-stage.play .cone {
+  animation: ssl_flick 1.4s 3.15s forwards;
+}
+
+.sleep-star-stage.play .night {
+  animation: ssl_off 1.2s 3.3s ease forwards;
+}
+
+.sleep-star-stage.play .glow2 {
+  animation: ssl_pulse 3s 4.8s ease-in-out infinite;
+}
+
+.sleep-star-stage.play .c2 {
+  animation: ssl_rise 0.8s 3.9s ease-out both;
+}
+
+.sleep-star-stage.play .table {
+  animation: ssl_rise 0.8s 4.1s ease-out both;
+}
+
+.sleep-star-stage.play .c1 {
+  animation: ssl_rise 0.8s 4.3s ease-out both;
+}
+
+.sleep-star-stage.play .c3 {
+  animation: ssl_rise 0.8s 4.5s ease-out both;
+}
+
+.sleep-star-stage.play .t1 {
+  animation: ssl_rise 0.9s 4.9s ease-out both;
+}
+
+.sleep-star-stage.play .shine {
+  animation: ssl_shine 1.1s 5.8s ease-in-out both;
+}
+
+.sleep-star-stage.play .t2 {
+  animation: ssl_rise 0.8s 5.9s ease-out both;
+}
+
+.sleep-star-stage.play .pop {
+  animation: ssl_pop 0.7s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+.sleep-star-stage.play .s1 { animation-delay: 5.5s; }
+.sleep-star-stage.play .s2 { animation-delay: 5.65s; }
+.sleep-star-stage.play .s3 { animation-delay: 5.8s; }
+.sleep-star-stage.play .sp { animation-delay: 6.5s; }
+.sleep-star-stage.play .tw {
+  animation: ssl_twinkle 2.6s 7.2s ease-in-out infinite;
+}
+
+@keyframes ssl_draw { to { stroke-dashoffset: 0; } }
+@keyframes ssl_cord { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes ssl_shade { from { opacity: 0; transform: translateY(-40px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ssl_swing {
+  0% { transform: rotate(0); }
+  18% { transform: rotate(6deg); }
+  38% { transform: rotate(-4.5deg); }
+  56% { transform: rotate(3deg); }
+  72% { transform: rotate(-1.6deg); }
+  86% { transform: rotate(0.7deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes ssl_flick {
+  0% { opacity: 0; }
+  8% { opacity: 0.9; }
+  14% { opacity: 0.15; }
+  24% { opacity: 1; }
+  32% { opacity: 0.4; }
+  44% { opacity: 1; }
+  100% { opacity: 1; }
+}
+@keyframes ssl_off { to { opacity: 0; } }
+@keyframes ssl_pulse { 0%, 100% { opacity: 0; } 50% { opacity: 0.5; } }
+@keyframes ssl_rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes ssl_pop { from { opacity: 0; transform: scale(0) rotate(-90deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes ssl_twinkle { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.55); opacity: 0.6; } }
+@keyframes ssl_shine { from { transform: translateX(-40px) skewX(-18deg); } to { transform: translateX(360px) skewX(-18deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sleep-star-stage.play * {
+    animation-duration: 0.01s !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+
+/* 6-Second Furniture to Brand Logo Choreography */
+@keyframes progress6s {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes furnitureBedStage {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(10px);
+  }
+  8%, 28% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  34%, 100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+    pointer-events: none;
+  }
+}
+
+@keyframes furnitureSofaStage {
+  0%, 30% {
+    opacity: 0;
+    transform: scale(0.85) translateY(10px);
+  }
+  38%, 58% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  64%, 100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+    pointer-events: none;
+  }
+}
+
+@keyframes brandLogoStage {
+  0%, 60% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-6deg);
+  }
+  68% {
+    opacity: 1;
+    transform: scale(1.08) rotate(0deg);
+  }
+  75%, 100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes brandTextReveal {
+  0%, 62% {
+    opacity: 0;
+    transform: translateY(12px);
+    letter-spacing: 0.05em;
+  }
+  74%, 100% {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0.2em;
+  }
+}
+
+.animate-progress-6s {
+  animation: progress6s 6s linear infinite;
+}
+
+.animate-furniture-bed {
+  animation: furnitureBedStage 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-furniture-sofa {
+  animation: furnitureSofaStage 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-brand-logo-6s {
+  animation: brandLogoStage 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+.animate-brand-text-6s {
+  animation: brandTextReveal 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+
+

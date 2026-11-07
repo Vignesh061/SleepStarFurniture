@@ -1,0 +1,612 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model & Schema Documentation
+// ===============================================================
+//
+// Project: Sleep Star Furniture
+// Database: Cloud Firestore
+//
+// Collections:
+//
+// 1. /admins/{adminId}
+//    Document ID: Firebase Auth UID of authorized administrator.
+//    Fields:
+//      - email: string, 5..100 chars (required) - Admin email address
+//      - role: string, 3..30 chars (required) - e.g. 'admin', 'superadmin', 'editor'
+//      - isActive: bool (required) - Account active status
+//      - displayName: string, 1..100 chars (optional) - Administrator name
+//      - name: string, 1..100 chars (optional) - Alternative admin name
+//      - createdAt: timestamp (required, immutable) - Document creation time
+//      - updatedAt: timestamp (optional) - Last update time
+//
+// 2. /categories/{categoryId}
+//    Document ID: Auto-generated string or unique category slug.
+//    Fields:
+//      - name: string, 1..100 chars (required) - Category display name
+//      - slug: string, 1..100 chars (optional) - URL-friendly slug
+//      - description: string, 0..1000 chars (optional) - Category description
+//      - imageUrl: string, 0..1000 chars (optional) - Category banner or icon URL
+//      - isActive: bool (required) - Visibility toggle for public listing
+//      - displayOrder: number (optional) - Sorting position
+//      - order: number (optional) - Legacy sorting position
+//      - itemCount: number (optional) - Denormalized product count
+//      - createdAt: timestamp (required, immutable) - Creation time
+//      - updatedAt: timestamp (optional) - Last update time
+//
+// 3. /products/{productId}
+//    Document ID: Auto-generated string.
+//    Fields:
+//      - name: string, 1..200 chars (required unless title provided) - Product name
+//      - title: string, 1..200 chars (required unless name provided) - Product title
+//      - category: string, 0..100 chars (optional) - Category identifier or name
+//      - categoryId: string, 0..100 chars (optional) - Foreign key to categories
+//      - description: string, 0..5000 chars (optional) - Product details and specs
+//      - regularPrice: number, >= 0 (optional) - Base retail price in INR
+//      - price: number, >= 0 (optional) - Alternative retail price in INR
+//      - offerPrice: number, >= 0 (optional) - Discounted promotional price in INR
+//      - salePrice: number, >= 0 (optional) - Alternative promotional price in INR
+//      - images: list of strings, <= 20 items (optional) - Product image URLs
+//      - imageUrls: list of strings, <= 20 items (optional) - Product image URLs
+//      - coverImage: string, 0..1000 chars (optional) - Primary thumbnail URL
+//      - imageUrl: string, 0..1000 chars (optional) - Primary thumbnail URL
+//      - dimensions: string (0..200 chars) or map (optional) - Physical dimensions
+//      - specifications: map, list, or string <= 3000 chars (optional) - Technical specs
+//      - features: list, map, or string <= 3000 chars (optional) - Key selling points
+//      - material: string, 0..200 chars (optional) - Wood type, fabric, polish
+//      - woodType: string, 0..200 chars (optional) - Specific wood grade (Teak, etc.)
+//      - warranty: string, 0..100 chars (optional) - Warranty terms (e.g. '5 Years')
+//      - isPublished: bool (required) - Public catalogue publication status
+//      - isFeatured: bool (optional) - Homepage featured showcase toggle
+//      - inStock: bool (optional) - Availability flag
+//      - stock: number, >= 0 (optional) - Inventory count
+//      - displayOrder: number, >= 0 (optional) - Display ordering priority
+//      - createdAt: timestamp (required, immutable) - Creation time
+//      - updatedAt: timestamp (optional) - Last update time
+//
+// 4. /services/{serviceId}
+//    Document ID: Auto-generated string.
+//    Fields:
+//      - title: string, 1..200 chars (required unless name provided) - Service title
+//      - name: string, 1..200 chars (required unless title provided) - Service name
+//      - description: string, 0..5000 chars (optional) - Service scope and details
+//      - startingPrice: number, >= 0 (optional) - Starting estimate rate
+//      - price: number, >= 0 (optional) - Alternative estimate rate
+//      - coverImage: string, 0..1000 chars (optional) - Service visual banner
+//      - imageUrl: string, 0..1000 chars (optional) - Alternative visual banner
+//      - images: list of strings, <= 20 items (optional) - Service gallery photos
+//      - imageUrls: list of strings, <= 20 items (optional) - Gallery photos
+//      - features: list, map, or string <= 3000 chars (optional) - Included highlights
+//      - highlights: list, map, or string <= 3000 chars (optional) - Key features
+//      - isActive: bool (required) - Active visibility in service catalogue
+//      - isFeatured: bool (optional) - Featured on customer landing page
+//      - displayOrder: number, >= 0 (optional) - Display ordering priority
+//      - order: number, >= 0 (optional) - Alternative ordering priority
+//      - createdAt: timestamp (required, immutable) - Creation time
+//      - updatedAt: timestamp (optional) - Last update time
+//
+// 5. /projects/{projectId}
+//    Document ID: Auto-generated string.
+//    Fields:
+//      - title: string, 1..200 chars (required) - Completed project title
+//      - description: string, 0..5000 chars (optional) - Project scope and craftsmanship
+//      - status: string in ['published', 'draft', 'archived'] (required) - Lifecycle status
+//      - category: string, 0..100 chars (optional) - Project category tag
+//      - serviceType: string, 0..100 chars (optional) - Custom service classification
+//      - location: string, 0..200 chars (optional) - Installation location (e.g. 'Coimbatore')
+//      - images: list of strings, <= 20 items (optional) - Completed work photos
+//      - imageUrls: list of strings, <= 20 items (optional) - Photos
+//      - coverImage: string, 0..1000 chars (optional) - Hero showcase thumbnail
+//      - imageUrl: string, 0..1000 chars (optional) - Thumbnail
+//      - videoUrl: string, 0..1000 chars (optional) - Showcase video embed or storage URL
+//      - clientName: string, 0..100 chars (optional) - Client reference name
+//      - completionDate: string (0..50 chars) or timestamp (optional) - Project completion
+//      - materials: list of strings (<= 20 items) or string <= 500 chars (optional)
+//      - cost: number >= 0 or string <= 50 chars (optional) - Project budget/cost
+//      - price: number >= 0 or string <= 50 chars (optional) - Project price
+//      - isFeatured: bool (optional) - Featured on homepage completed projects
+//      - displayOrder: number, >= 0 (optional) - Portfolio ordering
+//      - createdAt: timestamp (required, immutable) - Creation time
+//      - updatedAt: timestamp (optional) - Last update time
+//
+// 6. /offers/{offerId}
+//    Document ID: Auto-generated string.
+//    Fields:
+//      - title: string, 1..200 chars (required) - Deal or campaign title
+//      - description: string, 0..2000 chars (optional) - Offer details and terms
+//      - discountPercentage: number, 0..100 (optional) - Percentage discount
+//      - discountRate: number, 0..100 (optional) - Alternative discount rate
+//      - discount: number, 0..100 (optional) - Alternative discount number
+//      - offerPrice: number, >= 0 (optional) - Special deal price in INR
+//      - regularPrice: number, >= 0 (optional) - Standard price in INR
+//      - productId: string, 0..100 chars (optional) - Specific associated product
+//      - productIds: list of strings, <= 50 items (optional) - Applicable product IDs
+//      - code: string, 0..50 chars (optional) - Promo or coupon code
+//      - couponCode: string, 0..50 chars (optional) - Alternative coupon code
+//      - imageUrl: string, 0..1000 chars (optional) - Promotional banner URL
+//      - bannerUrl: string, 0..1000 chars (optional) - Banner URL
+//      - coverImage: string, 0..1000 chars (optional) - Thumbnail
+//      - startDate: timestamp (optional) - Promotional validity start
+//      - endDate: timestamp (optional) - Promotional validity end
+//      - isActive: bool (required) - Active promotion toggle
+//      - isFeatured: bool (optional) - Highlight on customer offers page
+//      - displayOrder: number, >= 0 (optional) - Display priority
+//      - createdAt: timestamp (required, immutable) - Creation time
+//      - updatedAt: timestamp (optional) - Last update time
+//
+// 7. /siteSettings/{settingId}
+//    Document ID: e.g. 'general', 'contact', 'banners', 'seo'.
+//    Fields:
+//      - businessName: string, 0..200 chars (optional)
+//      - businessPhone: string, 0..50 chars (optional)
+//      - phone: string, 0..50 chars (optional)
+//      - whatsappNumber: string, 0..50 chars (optional)
+//      - businessEmail: string, 0..100 chars (optional)
+//      - email: string, 0..100 chars (optional)
+//      - address: string, 0..500 chars (optional)
+//      - location: string, 0..200 chars (optional)
+//      - googleMapsUrl: string, 0..1000 chars (optional)
+//      - socialLinks: map (optional)
+//      - banners: list, <= 10 items (optional)
+//      - businessHours: string (0..300 chars) or map (optional)
+//      - aboutUs: string, 0..5000 chars (optional)
+//      - tagline: string, 0..300 chars (optional)
+//      - metaTitle: string, 0..200 chars (optional)
+//      - metaDescription: string, 0..500 chars (optional)
+//      - logoUrl: string, 0..1000 chars (optional)
+//      - faviconUrl: string, 0..1000 chars (optional)
+//      - announcement: string, 0..500 chars (optional)
+//      - createdAt: timestamp (optional, immutable)
+//      - updatedAt: timestamp (optional)
+//
+// 8. /enquiries/{enquiryId}
+//    Document ID: Auto-generated string.
+//    Fields:
+//      - customerName: string, 1..100 chars (required) - Submitter's full name
+//      - phone: string, 1..30 chars (required, non-empty) - Customer contact phone
+//      - enquiryType: string, 1..100 chars (required) - e.g. 'product', 'service', 'project'
+//      - status: string (required) - On public create: strictly 'New'
+//                On admin update: in ['New', 'Contacted', 'Site Visit Scheduled',
+//                                     'Quotation Sent', 'Confirmed', 'Completed', 'Closed']
+//      - createdAt: timestamp (required, immutable) - Submission time
+//      - updatedAt: timestamp (optional) - Processing time
+//      - email: string, 0..100 chars (optional) - Customer email
+//      - message: string, 0..3000 chars (optional) - Custom requirements description
+//      - relatedItemId: string, 0..100 chars (optional) - Product, service, or project ID
+//      - relatedItemName: string, 0..200 chars (optional) - Referenced item title
+//      - referenceImageUrl: string, 0..1000 chars (optional) - Reference image
+//      - imageUrl: string, 0..1000 chars (optional) - Alternative reference image
+//      - notes: string, 0..3000 chars (optional) - Internal admin notes
+//      - assignedTo: string, 0..100 chars (optional) - Admin assigned to resolve
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Global Helper Functions
+    // ===============================================================
+
+    // Check if the request is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if authenticated user holds admin custom token claim
+    function hasAdminClaim() {
+      return isAuthenticated() &&
+        ('admin' in request.auth.token && request.auth.token.admin == true);
+    }
+
+    // Check if user has an active document in /admins/{uid}
+    function isAdminDoc() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Admin authorization rule: custom claim OR verified /admins/ document OR primary admin email
+    function isAdmin() {
+      return hasAdminClaim() ||
+        isAdminDoc() ||
+        (isAuthenticated() && request.auth.token.email == 'vigneshpk66@gmail.com');
+    }
+
+    // Validate that document contains all required keys
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Validate that document contains only permitted keys (strict schema)
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Validate required string field bounds
+    function validString(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // Validate optional string field (if present, must be string within bounds)
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    // Validate optional non-negative number field
+    function isValidOptionalNumber(field, minVal, maxVal) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is number &&
+         request.resource.data[field] >= minVal &&
+         request.resource.data[field] <= maxVal);
+    }
+
+    // Validate optional list and cap its maximum element count
+    function isValidOptionalList(field, maxElements) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is list &&
+         request.resource.data[field].size() <= maxElements);
+    }
+
+    // Validate optional map field
+    function isValidOptionalMap(field) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is map);
+    }
+
+    // Validate timestamp is not in the future and reasonably recent
+    function isRecent(time) {
+      return time is timestamp &&
+        time <= request.time &&
+        time >= request.time - duration.value(5, 'm');
+    }
+
+    // Ensure specified keys cannot be mutated during an update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators (Enforced on BOTH create and update)
+    // ===============================================================
+
+    // --- 1. Admins Validator ---
+    function isValidAdmin(data) {
+      return hasRequiredFields(['email', 'role', 'isActive', 'createdAt']) &&
+        hasOnlyAllowedFields(['email', 'role', 'isActive', 'displayName', 'name', 'createdAt', 'updatedAt']) &&
+        data.email is string && data.email.size() >= 5 && data.email.size() <= 100 &&
+        data.role is string && data.role.size() >= 3 && data.role.size() <= 30 &&
+        data.isActive is bool &&
+        data.createdAt is timestamp &&
+        isValidOptionalString('displayName', 1, 100) &&
+        isValidOptionalString('name', 1, 100) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // --- 2. Category Validator ---
+    function isValidCategory(data) {
+      return hasRequiredFields(['name', 'isActive', 'createdAt']) &&
+        hasOnlyAllowedFields([
+          'name', 'slug', 'description', 'imageUrl', 'isActive',
+          'displayOrder', 'order', 'itemCount', 'createdAt', 'updatedAt'
+        ]) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.isActive is bool &&
+        data.createdAt is timestamp &&
+        isValidOptionalString('slug', 1, 100) &&
+        isValidOptionalString('description', 0, 1000) &&
+        isValidOptionalString('imageUrl', 0, 500000) &&
+        isValidOptionalNumber('displayOrder', 0, 100000) &&
+        isValidOptionalNumber('order', 0, 100000) &&
+        isValidOptionalNumber('itemCount', 0, 1000000) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // --- 3. Product Validator ---
+    function isValidProduct(data) {
+      return hasRequiredFields(['isPublished', 'createdAt']) &&
+        (('name' in data && data.name is string && data.name.size() >= 1 && data.name.size() <= 200) ||
+         ('title' in data && data.title is string && data.title.size() >= 1 && data.title.size() <= 200)) &&
+        hasOnlyAllowedFields([
+          'name', 'title', 'category', 'categoryId', 'description',
+          'regularPrice', 'price', 'offerPrice', 'salePrice',
+          'images', 'imageUrls', 'coverImage', 'imageUrl',
+          'dimensions', 'specifications', 'features', 'material',
+          'woodType', 'warranty', 'isPublished', 'isFeatured',
+          'inStock', 'stock', 'displayOrder', 'createdAt', 'updatedAt'
+        ]) &&
+        data.isPublished is bool &&
+        data.createdAt is timestamp &&
+        isValidOptionalString('name', 1, 200) &&
+        isValidOptionalString('title', 1, 200) &&
+        isValidOptionalString('category', 0, 100) &&
+        isValidOptionalString('categoryId', 0, 100) &&
+        isValidOptionalString('description', 0, 5000) &&
+        isValidOptionalNumber('regularPrice', 0, 100000000) &&
+        isValidOptionalNumber('price', 0, 100000000) &&
+        isValidOptionalNumber('offerPrice', 0, 100000000) &&
+        isValidOptionalNumber('salePrice', 0, 100000000) &&
+        isValidOptionalList('images', 20) &&
+        isValidOptionalList('imageUrls', 20) &&
+        isValidOptionalString('coverImage', 0, 500000) &&
+        isValidOptionalString('imageUrl', 0, 500000) &&
+        (!('dimensions' in data) || (data.dimensions is string && data.dimensions.size() <= 200) || data.dimensions is map) &&
+        (!('specifications' in data) || (data.specifications is string && data.specifications.size() <= 3000) || data.specifications is map || data.specifications is list) &&
+        (!('features' in data) || (data.features is string && data.features.size() <= 3000) || data.features is list || data.features is map) &&
+        isValidOptionalString('material', 0, 200) &&
+        isValidOptionalString('woodType', 0, 200) &&
+        isValidOptionalString('warranty', 0, 100) &&
+        (!('isFeatured' in data) || data.isFeatured is bool) &&
+        (!('inStock' in data) || data.inStock is bool) &&
+        isValidOptionalNumber('stock', 0, 100000) &&
+        isValidOptionalNumber('displayOrder', 0, 100000) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // --- 4. Service Validator ---
+    function isValidService(data) {
+      return hasRequiredFields(['isActive', 'createdAt']) &&
+        (('title' in data && data.title is string && data.title.size() >= 1 && data.title.size() <= 200) ||
+         ('name' in data && data.name is string && data.name.size() >= 1 && data.name.size() <= 200)) &&
+        hasOnlyAllowedFields([
+          'title', 'name', 'description', 'startingPrice', 'price',
+          'coverImage', 'imageUrl', 'images', 'imageUrls',
+          'features', 'highlights', 'isActive', 'isFeatured',
+          'displayOrder', 'order', 'createdAt', 'updatedAt'
+        ]) &&
+        data.isActive is bool &&
+        data.createdAt is timestamp &&
+        isValidOptionalString('title', 1, 200) &&
+        isValidOptionalString('name', 1, 200) &&
+        isValidOptionalString('description', 0, 5000) &&
+        isValidOptionalNumber('startingPrice', 0, 100000000) &&
+        isValidOptionalNumber('price', 0, 100000000) &&
+        isValidOptionalString('coverImage', 0, 1000) &&
+        isValidOptionalString('imageUrl', 0, 1000) &&
+        isValidOptionalList('images', 20) &&
+        isValidOptionalList('imageUrls', 20) &&
+        (!('features' in data) || (data.features is string && data.features.size() <= 3000) || data.features is list || data.features is map) &&
+        (!('highlights' in data) || (data.highlights is string && data.highlights.size() <= 3000) || data.highlights is list || data.highlights is map) &&
+        (!('isFeatured' in data) || data.isFeatured is bool) &&
+        isValidOptionalNumber('displayOrder', 0, 100000) &&
+        isValidOptionalNumber('order', 0, 100000) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // --- 5. Project Validator ---
+    function isValidProject(data) {
+      return hasRequiredFields(['title', 'status', 'createdAt']) &&
+        hasOnlyAllowedFields([
+          'title', 'description', 'status', 'category', 'serviceType',
+          'location', 'images', 'imageUrls', 'coverImage', 'imageUrl',
+          'videoUrl', 'clientName', 'completionDate', 'materials',
+          'cost', 'price', 'isFeatured', 'displayOrder', 'createdAt', 'updatedAt'
+        ]) &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+        data.status in ['published', 'draft', 'archived'] &&
+        data.createdAt is timestamp &&
+        isValidOptionalString('description', 0, 5000) &&
+        isValidOptionalString('category', 0, 100) &&
+        isValidOptionalString('serviceType', 0, 100) &&
+        isValidOptionalString('location', 0, 200) &&
+        isValidOptionalList('images', 20) &&
+        isValidOptionalList('imageUrls', 20) &&
+        isValidOptionalString('coverImage', 0, 500000) &&
+        isValidOptionalString('imageUrl', 0, 500000) &&
+        isValidOptionalString('videoUrl', 0, 1000) &&
+        isValidOptionalString('clientName', 0, 100) &&
+        (!('completionDate' in data) || (data.completionDate is string && data.completionDate.size() <= 50) || data.completionDate is timestamp) &&
+        (!('materials' in data) || (data.materials is string && data.materials.size() <= 500) || data.materials is list) &&
+        (!('cost' in data) || (data.cost is number && data.cost >= 0) || (data.cost is string && data.cost.size() <= 50)) &&
+        (!('price' in data) || (data.price is number && data.price >= 0) || (data.price is string && data.price.size() <= 50)) &&
+        (!('isFeatured' in data) || data.isFeatured is bool) &&
+        isValidOptionalNumber('displayOrder', 0, 100000) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // --- 6. Offer Validator ---
+    function isValidOffer(data) {
+      return hasRequiredFields(['title', 'isActive', 'createdAt']) &&
+        hasOnlyAllowedFields([
+          'title', 'description', 'discountPercentage', 'discountRate',
+          'discount', 'offerPrice', 'regularPrice', 'productId', 'productIds',
+          'code', 'couponCode', 'imageUrl', 'bannerUrl', 'coverImage',
+          'startDate', 'endDate', 'isActive', 'isFeatured', 'displayOrder',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+        data.isActive is bool &&
+        data.createdAt is timestamp &&
+        isValidOptionalString('description', 0, 2000) &&
+        isValidOptionalNumber('discountPercentage', 0, 100) &&
+        isValidOptionalNumber('discountRate', 0, 100) &&
+        isValidOptionalNumber('discount', 0, 100) &&
+        isValidOptionalNumber('offerPrice', 0, 100000000) &&
+        isValidOptionalNumber('regularPrice', 0, 100000000) &&
+        isValidOptionalString('productId', 0, 100) &&
+        isValidOptionalList('productIds', 50) &&
+        isValidOptionalString('code', 0, 50) &&
+        isValidOptionalString('couponCode', 0, 50) &&
+        isValidOptionalString('imageUrl', 0, 1000) &&
+        isValidOptionalString('bannerUrl', 0, 1000) &&
+        isValidOptionalString('coverImage', 0, 1000) &&
+        (!('startDate' in data) || data.startDate is timestamp) &&
+        (!('endDate' in data) || data.endDate is timestamp) &&
+        (!('isFeatured' in data) || data.isFeatured is bool) &&
+        isValidOptionalNumber('displayOrder', 0, 100000) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // --- 7. Site Settings Validator ---
+    function isValidSiteSetting(data) {
+      return hasOnlyAllowedFields([
+        'businessName', 'businessPhone', 'phone', 'whatsappNumber',
+        'businessEmail', 'email', 'address', 'location', 'googleMapsUrl',
+        'socialLinks', 'banners', 'businessHours', 'aboutUs', 'tagline',
+        'metaTitle', 'metaDescription', 'logoUrl', 'faviconUrl',
+        'announcement', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidOptionalString('businessName', 0, 200) &&
+      isValidOptionalString('businessPhone', 0, 50) &&
+      isValidOptionalString('phone', 0, 50) &&
+      isValidOptionalString('whatsappNumber', 0, 50) &&
+      isValidOptionalString('businessEmail', 0, 100) &&
+      isValidOptionalString('email', 0, 100) &&
+      isValidOptionalString('address', 0, 500) &&
+      isValidOptionalString('location', 0, 200) &&
+      isValidOptionalString('googleMapsUrl', 0, 1000) &&
+      isValidOptionalMap('socialLinks') &&
+      isValidOptionalList('banners', 10) &&
+      (!('businessHours' in data) || (data.businessHours is string && data.businessHours.size() <= 300) || data.businessHours is map) &&
+      isValidOptionalString('aboutUs', 0, 5000) &&
+      isValidOptionalString('tagline', 0, 300) &&
+      isValidOptionalString('metaTitle', 0, 200) &&
+      isValidOptionalString('metaDescription', 0, 500) &&
+      isValidOptionalString('logoUrl', 0, 1000) &&
+      isValidOptionalString('faviconUrl', 0, 1000) &&
+      isValidOptionalString('announcement', 0, 500) &&
+      (!('createdAt' in data) || data.createdAt is timestamp) &&
+      (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // --- 8. Public Enquiry Submission Validator ---
+    // Enforces: customerName, phone (non-empty string), enquiryType, status == 'New', createdAt
+    function isValidPublicEnquiry(data) {
+      return hasRequiredFields(['customerName', 'phone', 'enquiryType', 'status', 'createdAt']) &&
+        hasOnlyAllowedFields([
+          'customerName', 'phone', 'enquiryType', 'status', 'createdAt',
+          'updatedAt', 'email', 'message', 'relatedItemId', 'relatedItemName',
+          'referenceImageUrl', 'imageUrl', 'notes', 'assignedTo'
+        ]) &&
+        data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 100 &&
+        data.phone is string && data.phone.size() >= 1 && data.phone.size() <= 30 &&
+        data.enquiryType is string && data.enquiryType.size() >= 1 && data.enquiryType.size() <= 100 &&
+        data.status == 'New' &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.createdAt >= request.time - duration.value(5, 'm') &&
+        isValidOptionalString('email', 0, 100) &&
+        isValidOptionalString('message', 0, 3000) &&
+        isValidOptionalString('relatedItemId', 0, 100) &&
+        isValidOptionalString('relatedItemName', 0, 200) &&
+        isValidOptionalString('referenceImageUrl', 0, 1000) &&
+        isValidOptionalString('imageUrl', 0, 1000) &&
+        isValidOptionalString('notes', 0, 3000) &&
+        isValidOptionalString('assignedTo', 0, 100) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // --- 9. Admin Enquiry Management Validator ---
+    function isValidAdminEnquiry(data) {
+      return hasRequiredFields(['customerName', 'phone', 'enquiryType', 'status', 'createdAt']) &&
+        hasOnlyAllowedFields([
+          'customerName', 'phone', 'enquiryType', 'status', 'createdAt',
+          'updatedAt', 'email', 'message', 'relatedItemId', 'relatedItemName',
+          'referenceImageUrl', 'imageUrl', 'notes', 'assignedTo'
+        ]) &&
+        data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 100 &&
+        data.phone is string && data.phone.size() >= 1 && data.phone.size() <= 30 &&
+        data.enquiryType is string && data.enquiryType.size() >= 1 && data.enquiryType.size() <= 100 &&
+        (data.status in ['New', 'Contacted', 'Site Visit Scheduled', 'Quotation Sent', 'Confirmed', 'Completed', 'Closed'] ||
+         (data.status is string && data.status.size() >= 1 && data.status.size() <= 50)) &&
+        data.createdAt is timestamp &&
+        isValidOptionalString('email', 0, 100) &&
+        isValidOptionalString('message', 0, 3000) &&
+        isValidOptionalString('relatedItemId', 0, 100) &&
+        isValidOptionalString('relatedItemName', 0, 200) &&
+        isValidOptionalString('referenceImageUrl', 0, 1000) &&
+        isValidOptionalString('imageUrl', 0, 1000) &&
+        isValidOptionalString('notes', 0, 3000) &&
+        isValidOptionalString('assignedTo', 0, 100) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // ===============================================================
+    // Collection Match Rules
+    // ===============================================================
+
+    // Root Default Deny - Deny all reads and writes by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 1. Admins Collection
+    // Public cannot read, list, create, or update admins. Only existing admins or the primary admin can read and write.
+    match /admins/{adminId} {
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == adminId);
+      allow create: if (isAdmin() || (isAuthenticated() && request.auth.uid == adminId && request.auth.token.email == 'vigneshpk66@gmail.com')) && isValidAdmin(request.resource.data);
+      allow update: if isAdmin() && isValidAdmin(request.resource.data) && areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // 2. Categories Collection
+    // Public can read categories. Admins have write access.
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidCategory(request.resource.data);
+      allow update: if isAdmin() && isValidCategory(request.resource.data) && areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // 3. Products Collection
+    // Public can read products. Admins have write access.
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidProduct(request.resource.data);
+      allow update: if isAdmin() && isValidProduct(request.resource.data) && areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // 4. Services Collection
+    // Public can read services. Admins have write access.
+    match /services/{serviceId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidService(request.resource.data);
+      allow update: if isAdmin() && isValidService(request.resource.data) && areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // 5. Completed Projects CMS Collection
+    // Public can read completed projects. Admins have write access.
+    match /projects/{projectId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidProject(request.resource.data);
+      allow update: if isAdmin() && isValidProject(request.resource.data) && areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // 6. Offers & Discounts Collection
+    // Public can read active offers. Admins have write access.
+    match /offers/{offerId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidOffer(request.resource.data);
+      allow update: if isAdmin() && isValidOffer(request.resource.data) && areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // 7. Site Content Settings Collection
+    // Public can read site settings. Admins have full access.
+    match /siteSettings/{settingId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidSiteSetting(request.resource.data);
+      allow update: if isAdmin() && isValidSiteSetting(request.resource.data) && areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+
+    // 8. Customer Enquiries Collection
+    // Public can CREATE enquiries with strict validation.
+    // Public CANNOT read, list, update, or delete enquiries.
+    // Admins can read, update status, and manage all enquiries.
+    match /enquiries/{enquiryId} {
+      allow read: if isAdmin();
+      allow create: if (isValidPublicEnquiry(request.resource.data)) ||
+                       (isAdmin() && isValidAdminEnquiry(request.resource.data));
+      allow update: if isAdmin() && isValidAdminEnquiry(request.resource.data) && areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAdmin();
+    }
+  }
+}
